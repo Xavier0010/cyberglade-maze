@@ -3,7 +3,13 @@ const videoElement = document.getElementById('webcam-stream');
 const gameCanvas = document.getElementById('game-canvas');
 const canvasCtx = gameCanvas.getContext('2d');
 
-// --- 2. Variabel & Konstanta Game ---
+// ponytail: language data hardcoded; use JSON/file for translations
+const langData = {
+    en: { menuTitle: "CYBERGLADE MAZE", start1P: "START (1P)", start2P: "START (2P)", settings: "SETTINGS", map: "MAP:", mapSelect: "SELECT MAP TYPE", theme: "Theme", dark: "DARK", light: "LIGHT", modeHand: "Change Mode: Hand", modeNose: "Change Mode: Nose", activeMode: "Active Mode:", hand: "HAND", nose: "NOSE" },
+    id: { menuTitle: "CYBERGLADE MAZE", start1P: "MULAI (1P)", start2P: "MULAI (2P)", settings: "PENGATURAN", map: "MAP:", mapSelect: "PILIH TIPE MAP", theme: "Tema", dark: "GELAP", light: "TERANG", modeHand: "Ganti Mode: Tangan", modeNose: "Ganti Mode: Hidung", activeMode: "Mode Aktif:", hand: "TANGAN", nose: "HIDUNG" }
+};
+window.app = { lang: 'en', t: (key) => langData[window.app.lang][key] || key };
+
 const GameState = {
     MENU: 'MENU',
     PLAYING: 'PLAYING',
@@ -68,6 +74,7 @@ const closeSettingsButton = { x: 0, y: 0, w: 0, h: 0 };
 const settingOption1Button = { x: 0, y: 0, w: 0, h: 0 }; // Hand
 const settingOption2Button = { x: 0, y: 0, w: 0, h: 0 }; // Nose
 const themeToggleButton = { x: 0, y: 0, w: 0, h: 0 }; // Toggle Light/Dark
+const languageButton = { x: 0, y: 0, w: 0, h: 0 }; // Language selector
 
 // Tombol Pemilihan Mode
 const easyModeButton = { x: 0, y: 0, w: 0, h: 0 };
@@ -121,8 +128,8 @@ const easyMaze = [
     [1,0,1,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
     [1,0,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
     [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-    [1,0,1,1,1,0,1,0,2,0,0,0,1,0,1,1,1,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,0,0,0,0,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1],
     [1,0,1,1,1,0,1,0,0,0,0,0,1,0,1,1,1,1,1],
     [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
     [1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1],
@@ -143,8 +150,8 @@ const mediumMaze = [
     [1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
     [1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,1,1,1,1],
     [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
-    [1,0,1,1,1,0,1,0,2,0,1,0,1,1,1,0,1,0,1],
-    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
+    [1,0,1,1,1,0,1,0,0,0,1,0,1,1,1,0,1,0,1],
+    [1,0,1,0,0,0,0,0,0,2,0,0,0,0,1,0,1,0,1],
     [1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1],
     [1,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,1,0,1],
     [1,0,0,0,1,0,1,0,1,0,1,0,1,0,0,0,1,0,1],
@@ -166,7 +173,7 @@ const hardMaze = [
     [1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,1,1,0,1],
     [1,0,1,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
     [1,0,1,1,1,1,1,0,0,0,0,0,1,1,1,0,1,1,1],
-    [1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,1],
     [1,1,1,1,0,1,1,1,0,0,0,1,1,1,0,1,1,1,1],
     [1,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,1],
     [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1],
@@ -310,19 +317,26 @@ function onFaceResults(results) {
 const hands = new window.Hands({
     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
-hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 hands.onResults(onHandResults);
 
 const faceMesh = new window.FaceMesh({
     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
 });
-faceMesh.setOptions({ maxNumFaces: 2, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+faceMesh.setOptions({ maxNumFaces: 2, refineLandmarks: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 faceMesh.onResults(onFaceResults);
 
+let isProcessing = false;
 const camera = new window.Camera(videoElement, {
     onFrame: async () => {
-        if (detectionMode === 'HAND') await hands.send({ image: videoElement });
-        else await faceMesh.send({ image: videoElement });
+        if (isProcessing) return;
+        isProcessing = true;
+        try {
+            if (detectionMode === 'HAND') await hands.send({ image: videoElement });
+            else await faceMesh.send({ image: videoElement });
+        } finally {
+            isProcessing = false;
+        }
     },
     width: 640, height: 480
 });
@@ -376,7 +390,11 @@ function gameLoop(timestamp) {
         case GameState.GAME_WIN: drawGameWin(deltaTime); break;
     }
 
-    drawModeInfoBox(); 
+    if (gameState === GameState.PLAYING || gameState === GameState.COUNTDOWN || gameState === GameState.WAITING_FOR_PLAYERS || gameState === GameState.GAME_OVER || gameState === GameState.GAME_WIN) {
+        drawModeInfoBox(); // stopwatch
+    } else {
+        drawActiveModeCard(); // active mode label
+    }
     
     // Gambar pointer hanya jika status bukan bermain ATAU (jika bermain, pemain belum mati & belum finish)
     for (let i = 0; i < pointers.length; i++) {
@@ -412,28 +430,57 @@ function gameLoop(timestamp) {
 
 // --- 6. Fungsi Gambar (Render) ---
 function drawModeInfoBox() {
-    const boxWidth = 300; const boxHeight = 80; const margin = 20;
-    const boxX = gameCanvas.width - boxWidth - margin; const boxY = margin;
+    const margin = 20;
     const tc = themes[currentTheme];
+    const t = elapsedTime > 0 || startTime > 0
+        ? (startTime > 0 ? (performance.now() - startTime) / 1000 : elapsedTime)
+        : 0;
+    const mm = String(Math.floor(t / 60)).padStart(2, '0');
+    const ss = String(Math.floor(t % 60)).padStart(2, '0');
+    const ms = String(Math.floor((t % 1) * 100)).padStart(2, '0');
+    const timeStr = `${mm}:${ss}.${ms}`;
+
+    canvasCtx.font = "bold 28px 'Orbitron'";
+    const tw = canvasCtx.measureText(timeStr).width;
+    const boxW = tw + 40; const boxH = 50;
+    const boxX = gameCanvas.width - boxW - margin; const boxY = margin;
 
     canvasCtx.fillStyle = tc.btnBg;
-    canvasCtx.strokeStyle = '#00FFFF'; 
+    canvasCtx.strokeStyle = '#00BFFF';
     canvasCtx.lineWidth = 2;
-    canvasCtx.strokeRect(boxX, boxY, boxWidth, boxHeight);
-    canvasCtx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    canvasCtx.strokeRect(boxX, boxY, boxW, boxH);
+    canvasCtx.fillRect(boxX, boxY, boxW, boxH);
 
-    const iconSize = 40; const iconX = boxX + 20;
-    const iconY = boxY + (boxHeight - iconSize) / 2;
-    const textX = iconX + iconSize + 15; const textY = boxY + 30;
+    canvasCtx.fillStyle = '#00BFFF';
+    canvasCtx.textAlign = 'center';
+    canvasCtx.shadowColor = '#00BFFF';
+    canvasCtx.shadowBlur = 8;
+    canvasCtx.fillText(timeStr, boxX + boxW / 2, boxY + 34);
+    canvasCtx.shadowBlur = 0;
+}
 
-    let modeText = detectionMode === 'HAND' ? "TANGAN" : "HIDUNG";
-    
-    canvasCtx.fillStyle = tc.text;
+function drawActiveModeCard() {
+    const margin = 20; const boxW = 220; const boxH = 70;
+    const boxX = gameCanvas.width - boxW - margin; const boxY = margin;
+    const tc = themes[currentTheme];
+    const label = window.app.lang === 'en' ? 'Active Mode:' : 'Mode Aktif:';
+    const modeText = detectionMode === 'HAND'
+        ? (window.app.lang === 'en' ? 'HAND' : 'TANGAN')
+        : (window.app.lang === 'en' ? 'NOSE' : 'HIDUNG');
+
+    canvasCtx.fillStyle = tc.btnBg;
+    canvasCtx.strokeStyle = '#00BFFF';
+    canvasCtx.lineWidth = 2;
+    canvasCtx.strokeRect(boxX, boxY, boxW, boxH);
+    canvasCtx.fillRect(boxX, boxY, boxW, boxH);
+
     canvasCtx.textAlign = 'left';
-    canvasCtx.font = "18px 'Orbitron'";
-    canvasCtx.fillText("Mode Aktif:", textX, textY);
-    canvasCtx.font = "bold 24px 'Orbitron'";
-    canvasCtx.fillText(modeText, textX, textY + 28);
+    canvasCtx.fillStyle = tc.textMuted;
+    canvasCtx.font = "14px 'Orbitron'";
+    canvasCtx.fillText(label, boxX + 14, boxY + 26);
+    canvasCtx.fillStyle = '#00BFFF';
+    canvasCtx.font = "bold 22px 'Orbitron'";
+    canvasCtx.fillText(modeText, boxX + 14, boxY + 54);
 }
 
 function drawMenu(deltaTime) {
@@ -447,7 +494,7 @@ function drawMenu(deltaTime) {
         const logoSize = 120; // Sesuaikan ukuran logo di menu
         canvasCtx.drawImage(logoImg, (gameCanvas.width / 2) - (logoSize / 2), 40, logoSize, logoSize);
     }
-    canvasCtx.fillText("CYBERGLADE MAZE", gameCanvas.width / 2, gameCanvas.height / 2 - 100);
+    canvasCtx.fillText(window.app.t('menuTitle'), gameCanvas.width / 2, gameCanvas.height / 2 - 100);
     canvasCtx.shadowBlur = 0; 
 
     const btnWidth = 300; const btnHeight = 70; const btnMargin = 20;
@@ -488,10 +535,10 @@ function drawMenu(deltaTime) {
         canvasCtx.fillText(text, button.x + button.w / 2, button.y + 45);
     };
 
-    drawButton(startButton1P, "MULAI (1P)", '#4299E1');
-    drawButton(startButton2P, "MULAI (2P)", '#E53E3E');
-    drawButton(settingsButton, "PENGATURAN", '#38A169'); 
-    drawButton(modeButton, `MAP: ${difficulty}`, '#DD6B20'); 
+    drawButton(startButton1P, window.app.t('start1P'), '#4299E1');
+    drawButton(startButton2P, window.app.t('start2P'), '#E53E3E');
+    drawButton(settingsButton, window.app.t('settings'), '#38A169'); 
+    drawButton(modeButton, `${window.app.t('map')} ${difficulty}`, '#DD6B20'); 
 
     if (dwellTimer >= DWELL_TIME && hoveredButton) {
         if (difficulty === 'EASY') maze = easyMaze;
@@ -528,7 +575,7 @@ function drawModeSelection(deltaTime) {
     const tc = themes[currentTheme];
     canvasCtx.fillStyle = tc.overlay; canvasCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
     canvasCtx.fillStyle = tc.textMuted; canvasCtx.font = "bold 48px 'Orbitron'"; canvasCtx.textAlign = 'center';
-    canvasCtx.fillText("PILIH TIPE MAP", gameCanvas.width / 2, 150);
+    canvasCtx.fillText(window.app.t('mapSelect'), gameCanvas.width / 2, 150);
 
     const btnWidth = 350; const btnHeight = 70; const btnMargin = 20;
     const startX = (gameCanvas.width - btnWidth) / 2; const startY = 250;
@@ -583,12 +630,12 @@ function drawSettings(deltaTime) {
     const tc = themes[currentTheme];
     canvasCtx.fillStyle = tc.overlay; canvasCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
     canvasCtx.fillStyle = tc.textMuted; canvasCtx.font = "bold 48px 'Orbitron'"; canvasCtx.textAlign = 'center';
-    canvasCtx.fillText("PENGATURAN", gameCanvas.width / 2, 150); 
+    canvasCtx.fillText(window.app.t('settings'), gameCanvas.width / 2, 150); 
 
     const btnWidth = 400; const btnHeight = 60; const btnMargin = 20;
     const startX = (gameCanvas.width - btnWidth) / 2; const startY = 250;
 
-    const titleWidth = canvasCtx.measureText("PENGATURAN").width;
+    const titleWidth = canvasCtx.measureText(window.app.t('settings')).width;
     closeSettingsButton.w = 50; closeSettingsButton.h = 50;
     closeSettingsButton.x = (gameCanvas.width / 2) + (titleWidth / 2) + 20; 
     closeSettingsButton.y = 150 - (closeSettingsButton.h / 2); 
@@ -596,8 +643,9 @@ function drawSettings(deltaTime) {
     themeToggleButton.x = startX; themeToggleButton.y = startY; themeToggleButton.w = btnWidth; themeToggleButton.h = btnHeight;
     settingOption1Button.x = startX; settingOption1Button.y = startY + btnHeight + btnMargin; settingOption1Button.w = btnWidth; settingOption1Button.h = btnHeight;
     settingOption2Button.x = startX; settingOption2Button.y = startY + (btnHeight + btnMargin) * 2; settingOption2Button.w = btnWidth; settingOption2Button.h = btnHeight;
+    languageButton.x = startX; languageButton.y = startY + (btnHeight + btnMargin) * 3; languageButton.w = btnWidth; languageButton.h = btnHeight;
 
-    let interaction = getHoverInteraction([themeToggleButton, settingOption1Button, settingOption2Button, closeSettingsButton]);
+    let interaction = getHoverInteraction([themeToggleButton, settingOption1Button, settingOption2Button, languageButton, closeSettingsButton]);
     let hoveredButton = interaction.button;
 
     dwellTimer = hoveredButton ? dwellTimer + deltaTime : 0;
@@ -621,9 +669,11 @@ function drawSettings(deltaTime) {
         canvasCtx.fillText(text, button.x + button.w / 2, button.y + 38);
     };
 
-    drawOptionButton(themeToggleButton, `Tema: ${currentTheme === 'DARK' ? 'GELAP' : 'TERANG'}`, '#D69E2E');
-    drawOptionButton(settingOption1Button, "Ganti Mode: Tangan", '#4299E1');
-    drawOptionButton(settingOption2Button, "Ganti Mode: Hidung", '#4299E1');
+    const langLabel = window.app.lang === 'en' ? 'English' : 'Indonesia';
+    drawOptionButton(themeToggleButton, `${window.app.t('theme')}: ${currentTheme === 'DARK' ? window.app.t('dark') : window.app.t('light')}`, '#D69E2E');
+    drawOptionButton(settingOption1Button, window.app.t('modeHand'), '#4299E1');
+    drawOptionButton(settingOption2Button, window.app.t('modeNose'), '#4299E1');
+    drawOptionButton(languageButton, `Language: ${langLabel}`, '#805AD5');
 
     // Close Button
     canvasCtx.fillStyle = tc.btnBg; canvasCtx.strokeStyle = '#E53E3E'; canvasCtx.lineWidth = 3;
@@ -650,6 +700,9 @@ function drawSettings(deltaTime) {
         }
         else if (hoveredButton === settingOption1Button) detectionMode = 'HAND';
         else if (hoveredButton === settingOption2Button) detectionMode = 'NOSE';
+        else if (hoveredButton === languageButton) {
+            window.app.lang = window.app.lang === 'en' ? 'id' : 'en';
+        }
         dwellTimer = 0;
     }
 }
@@ -717,7 +770,7 @@ function drawPlaying(deltaTime, isActive = true) {
             const tileY = offsetY + y * tileSize;
 
             if (tile === 1) canvasCtx.fillStyle = tc.wall; 
-            else if (tile === 2) canvasCtx.fillStyle = 'rgba(0, 150, 0, 0.5)'; 
+            else if (tile === 2) canvasCtx.fillStyle = playerCount === 2 ? tc.path : 'rgba(0, 150, 0, 0.5)';
             else if (tile === 3) canvasCtx.fillStyle = '#38A169'; // Finish Normal / Finish Kiri
             else if (tile === 4) canvasCtx.fillStyle = '#E53E3E'; // Garis Start
             else if (tile === 5) canvasCtx.fillStyle = '#E53E3E'; // Finish Kiri (Teamwork)
@@ -727,6 +780,15 @@ function drawPlaying(deltaTime, isActive = true) {
             canvasCtx.fillRect(tileX, tileY, tileSize, tileSize);
             canvasCtx.strokeStyle = tc.gridBorder;
             canvasCtx.strokeRect(tileX, tileY, tileSize, tileSize);
+        }
+    }
+
+    if (playerCount === 2) for (let gy = 0; gy < GRID_SIZE; gy++) for (let gx = 0; gx < GRID_SIZE; gx++) if (maze[gy][gx] === 2) {
+        canvasCtx.fillStyle = 'rgba(0, 150, 0, 0.5)';
+        for (const sx of [gx - 1, gx + 1]) {
+            canvasCtx.fillRect(offsetX + sx * tileSize, offsetY + gy * tileSize, tileSize, tileSize);
+            canvasCtx.strokeStyle = tc.gridBorder;
+            canvasCtx.strokeRect(offsetX + sx * tileSize, offsetY + gy * tileSize, tileSize, tileSize);
         }
     }
 
@@ -765,10 +827,6 @@ function drawPlaying(deltaTime, isActive = true) {
     } else if (!isActive && startTime > 0) {
         timerText = `Waktu: ${elapsedTime.toFixed(2)}s`;
     }
-    canvasCtx.fillStyle = tc.textMuted;
-    canvasCtx.font = "bold 24px 'Orbitron'";
-    canvasCtx.textAlign = 'left';
-    canvasCtx.fillText(timerText, 20, 40);
 }
 
 function drawGameOver(deltaTime) {
@@ -943,24 +1001,17 @@ function respawnPlayer(index) {
     for (let y = 0; y < GRID_SIZE; y++) {
         for (let x = 0; x < GRID_SIZE; x++) {
             if (maze[y][x] === 2) {
-                let tileCenterX = offsetX + x * tileSize + tileSize / 2;
-                let tileCenterY = offsetY + y * tileSize + tileSize / 2;
-
-                if (playerCount === 1) {
-                    players[index].x = tileCenterX - players[index].size / 2;
-                    players[index].y = tileCenterY - players[index].size / 2;
-                } else {
-                    let offset = tileSize * 0.25; 
-                    if (index === 0) players[index].x = tileCenterX - offset - players[index].size / 2; // Kiri
-                    else players[index].x = tileCenterX + offset - players[index].size / 2; // Kanan
-                    
-                    players[index].y = tileCenterY - players[index].size / 2;
-                }
+                const tileCenterX = offsetX + x * tileSize + tileSize / 2;
+                const tileCenterY = offsetY + y * tileSize + tileSize / 2;
+                // 1P: exact center. 2P: L is -1 tile, R is +1 tile from center
+                const xOff = playerCount === 1 ? 0 : (index === 0 ? -tileSize : tileSize);
+                players[index].x = tileCenterX + xOff - players[index].size / 2;
+                players[index].y = tileCenterY - players[index].size / 2;
                 spawnFound = true;
                 break;
             }
         }
-        if(spawnFound) break;
+        if (spawnFound) break;
     }
     if (!spawnFound) {
         players[index].x = gameCanvas.width / 2 - players[index].size / 2;
@@ -972,17 +1023,31 @@ function checkCollision(playerIndex) {
     const p = players[playerIndex];
     if (p.isDead || p.hasFinished) return;
 
-    const playerCenterX = p.x + p.size / 2;
-    const playerCenterY = p.y + p.size / 2;
+    // Check bounds of player square bounding box in maze grid
+    const startGridX = Math.floor((p.x - offsetX) / tileSize);
+    const endGridX = Math.floor((p.x + p.size - 1 - offsetX) / tileSize);
+    const startGridY = Math.floor((p.y - offsetY) / tileSize);
+    const endGridY = Math.floor((p.y + p.size - 1 - offsetY) / tileSize);
 
-    const gridX = Math.floor((playerCenterX - offsetX) / tileSize);
-    const gridY = Math.floor((playerCenterY - offsetY) / tileSize);
-    
-    if (gridX < 0 || gridX >= GRID_SIZE || gridY < 0 || gridY >= GRID_SIZE) return;
+    let collidedWithWall = false;
+    let hitTile = 0;
 
-    const tile = maze[gridY][gridX];
+    for (let gY = startGridY; gY <= endGridY; gY++) {
+        for (let gX = startGridX; gX <= endGridX; gX++) {
+            if (gX < 0 || gX >= GRID_SIZE || gY < 0 || gY >= GRID_SIZE) {
+                collidedWithWall = true;
+                continue;
+            }
+            const tile = maze[gY][gX];
+            if (tile === 1) {
+                collidedWithWall = true;
+            } else if (tile > 1) {
+                hitTile = tile;
+            }
+        }
+    }
 
-    if (tile === 1) { // Tembok
+    if (collidedWithWall) {
         if (difficulty === 'TEAMWORK') {
             // Teamwork: 1 mati, semua mati
             players[0].isDead = true;
@@ -997,7 +1062,7 @@ function checkCollision(playerIndex) {
         } else {
             // Normal 2P
             p.isDead = true;
-            createExplosion(playerCenterX, playerCenterY, p.color);
+            createExplosion(p.x + p.size / 2, p.y + p.size / 2, p.color);
             
             if (players[0].isDead && players[1].isDead) {
                 gameState = GameState.GAME_OVER;
@@ -1005,15 +1070,15 @@ function checkCollision(playerIndex) {
             }
         }
     } else if (difficulty === 'TEAMWORK') {
-        // Logika Finish Teamwork: L(0) harus ke 3, R(1) harus ke 5
-        if ((playerIndex === 0 && tile === 3) || (playerIndex === 1 && tile === 5)) {
+        // Logika Finish Teamwork: L(0) harus ke 5, R(1) harus ke 6
+        if ((playerIndex === 0 && hitTile === 5) || (playerIndex === 1 && hitTile === 6)) {
             p.hasFinished = true;
             if (players[0].hasFinished && players[1].hasFinished) {
                 gameState = GameState.GAME_WIN;
                 if (startTime > 0) { elapsedTime = (performance.now() - startTime) / 1000; startTime = 0; }
             }
         }
-    } else if (tile === 3) { 
+    } else if (hitTile === 3) { 
         // Normal Win 
         gameState = GameState.GAME_WIN;
         winnerLabel = p.label;
@@ -1021,7 +1086,7 @@ function checkCollision(playerIndex) {
            elapsedTime = (performance.now() - startTime) / 1000;
            startTime = 0;
         }
-    } else if (tile === 4 && startTime === 0) { 
+    } else if (hitTile === 4 && startTime === 0) { 
         startTime = performance.now();
     }
 }
@@ -1073,9 +1138,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.IntroAnimation && typeof window.IntroAnimation.start === 'function') {
         window.IntroAnimation.start(() => {
             bgMusic.play().catch(e => console.log("Autoplay musik gagal."));
+            startWebcam();
             requestAnimationFrame(gameLoop); 
         });
     } else {
+        startWebcam();
         requestAnimationFrame(gameLoop);
     }
 });
+
+function startWebcam() {
+    videoElement.style.display = 'block';
+}

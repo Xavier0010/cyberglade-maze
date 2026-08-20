@@ -62,9 +62,7 @@ body, html {
     
     /* Tampilan video diatur agar menutupi area tanpa distorsi */
     object-fit: cover;
-    /* Filter untuk meningkatkan visibilitas di atas game */
-    filter: grayscale(80%) brightness(1.1);
-    
+
     /* Berada di atas kanvas game */
     z-index: 100;
 }
